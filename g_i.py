@@ -1,129 +1,42 @@
-import pygame
-import time
-import random
+from coordinate import *
 
-pygame.init()
-
-white = (255, 255, 255)
-yellow = (255, 255, 102)
-black = (0, 0, 0)
-red = (213, 50, 80)
-green = (0, 255, 0)
-blue = (50, 153, 213)
-
-dis_width = 600
-dis_height = 400
-
-dis = pygame.display.set_mode((dis_width, dis_height))
-pygame.display.set_caption('Snake Game by Edureka')
-
-clock = pygame.time.Clock()
-
-snake_block = 10
-snake_speed = 15
-
-font_style = pygame.font.SysFont("bahnschrift", 25)
-score_font = pygame.font.SysFont("comicsansms", 35)
+running = True
+rolling = True
+current_dice = roll_dice()
+saved_dice = None  # Biến lưu kết quả khi xúc xắc dừng
 
 
-def Your_score(score):
-    value = score_font.render("Your Score: " + str(score), True, yellow)
-    dis.blit(value, [0, 0])
+if __name__ == '__main__':
+    while running:
+        screen.fill(WHITE)  # Xóa màn hình
 
+        # Vẽ nhân vật
+        pygame.draw.rect(screen, BLUE, (*player_pos, size, size))
 
-
-def our_snake(snake_block, snake_list):
-    for x in snake_list:
-        pygame.draw.rect(dis, black, [x[0], x[1], snake_block, snake_block])
-
-
-def message(msg, color):
-    mesg = font_style.render(msg, True, color)
-    dis.blit(mesg, [dis_width / 6, dis_height / 3])
-
-
-def gameLoop():
-    game_over = False
-    game_close = False
-
-    x1 = dis_width / 2
-    y1 = dis_height / 2
-
-    x1_change = 0
-    y1_change = 0
-
-    snake_List = []
-    Length_of_snake = 1
-
-    foodx_: tuple = tuple(dis_width // i for i in range(1, 6))
-    foody: int = dis_height // 2
-    for foodx in foodx_:
-        pygame.draw.rect(dis, green, [foodx, foody, snake_block, snake_block])
-
-    while not game_over:
-
-        while game_close == True:
-            dis.fill(blue)
-            message("You Lost! Press C-Play Again or Q-Quit", red)
-            Your_score(Length_of_snake - 1)
-            pygame.display.update()
-
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        game_over = True
-                        game_close = False
-                    if event.key == pygame.K_c:
-                        gameLoop()
-
+        # Vẽ các nút
+        for node in nodes:
+            pygame.draw.circle(screen, RED, node, size//2)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                game_over = True
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    x1_change = -snake_block
-                    y1_change = 0
-                elif event.key == pygame.K_RIGHT:
-                    x1_change = snake_block
-                    y1_change = 0
-                elif event.key == pygame.K_UP:
-                    y1_change = -snake_block
-                    x1_change = 0
-                elif event.key == pygame.K_DOWN:
-                    y1_change = snake_block
-                    x1_change = 0
+                running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                rolling = not rolling
+                if not rolling:  # Nếu dừng, lưu kết quả
+                    saved_dice = current_dice + 1
+                    move(saved_dice)
 
-        if x1 >= dis_width or x1 < 0 or y1 >= dis_height or y1 < 0:
-            game_close = True
-        x1 += x1_change
-        y1 += y1_change
-        dis.fill(blue)
+                    # Kiểm tra nếu nhân vật đi vào một nút
+                    for node in nodes:
+                        if player_pos[0] - node[0] == 0:
+                            print("Mở trò chơi mới!")  # Ở đây bạn có thể gọi một game mới
+                            break
 
-        snake_Head = []
-        snake_Head.append(x1)
-        snake_Head.append(y1)
-        snake_List.append(snake_Head)
-        if len(snake_List) > Length_of_snake:
-            del snake_List[0]
+        # Xúc xắc xoay liên tục
+        if rolling:
+            current_dice = roll_dice()
 
-        for x in snake_List[:-1]:
-            if x == snake_Head:
-                game_close = True
-
-        our_snake(snake_block, snake_List)
-        Your_score(Length_of_snake - 1)
-
-        pygame.display.update()
-
-        if x1 == foodx and y1 == foody:
-            # foodx = round(random.randrange(0, dis_width - snake_block) / 10.0) * 10.0
-            # foody = round(random.randrange(0, dis_height - snake_block) / 10.0) * 10.0
-            Length_of_snake += 1
-
-        clock.tick(snake_speed)
+        screen.blit(dice_images[current_dice], (WIDTH-70, 0))
+        pygame.display.flip()
+        clock.tick(10)  # Giữ tốc độ xoay hợp lý
 
     pygame.quit()
-    quit()
-
-
-gameLoop()
